@@ -10,41 +10,57 @@ Created on Tue Jul  6 14:56:10 2021
 import numpy as np, pandas as pd, matplotlib.pyplot as plt, netCDF4 as nc, glob, os
 from mpl_toolkits.basemap import Basemap
 
-os.chdir('E:/remembernokorean/python/')
-# path='D:/LTRANS/YECS_sarga_2020wnd1/output20170518/' # ocnp
-# path2='D:/LTRANS/YECS_sarga_2020wnd1/output20170518_apw0/' # ocnp
-path='D:/LTRANS/YECS_sarga_2020wnd1/output20170413/' # ocnp
-path2='D:/LTRANS/YECS_sarga_2020wnd1/output20170413_apw0/' # ocnp
-path3='D:/output2017/' # ocnp
-# path='C:/Users/262mi/Documents/output/' # Windows
-# path='/home/helmut/USB/remembernokorean/python/output_0413/' # Linux
-# path2, path3=path, path # dormitory
-# os.mkdir(path2+'figure')
+# os.chdir('E:/remembernokorean/python/')
+path='D:/LTRANS/YECS_sarga_2020wnd1/output_apw_1/'
+path2='D:/LTRANS/YECS_sarga_2020wnd1/output_apw_0/'
+path3='D:/output2016-2019/'
+dlist, dlist2=os.listdir(path), os.listdir(path2)
+# os.mkdir(path2+dlist2[9]+'/figure')
 
-flist=sorted(glob.glob(path+'*.csv'))
-flist2=sorted(glob.glob(path2+'*.csv'))
+flist=sorted(glob.glob(path+dlist[9]+'/*.csv'))
+flist2=sorted(glob.glob(path2+dlist2[9]+'/*.csv'))
 
-A=pd.date_range('2017-04-13 12:00', periods=120, freq='+1d').strftime('%Y-%m-%d %H:%M')
+A=pd.date_range('2019-04-01 12:00', periods=120, freq='+1d').strftime('%Y-%m-%d %H:%M')
 
 for i in range(round(len(flist)/24)):
-    C=pd.read_csv(flist[(i*24)+1], header=None, index_col=False) # ocnp
-    # D=pd.read_csv(flist2[(i*24)+1], header=None, index_col=False) # ocnp
-    D=pd.read_csv(flist[(i*24)], header=None, index_col=False) # dormitory
+    C=pd.read_csv(flist[(i*24)+1], header=None, index_col=False)
+    D=pd.read_csv(flist2[(i*24)+1], header=None, index_col=False)
     C, D=np.array(C), np.array(D)
-
-    B=nc.Dataset(path3+'yecs15_his_'+f'{i+548:04d}.nc', 'r', format='NETCDF4') # 469
+    
+    if flist[1][49:57]=='20170213':
+        j=410
+    elif flist[1][49:57]=='20170413':
+        j=469
+    elif flist[1][49:57]=='20170429':
+        j=485
+    elif flist[1][49:57]=='20170518':
+        j=504
+    elif flist[1][49:57]=='20170602':
+        j=519
+    elif flist[1][49:57]=='20180328':
+        j=818
+    elif flist[1][49:57]=='20180420':
+        j=841
+    elif flist[1][49:57]=='20180504':
+        j=855
+    elif flist[1][49:57]=='20190313':
+        j=1168
+    elif flist[1][49:57]=='20190401':
+        j=1187
+    else:
+        j=1219 # '20190503'
+    
+    B=nc.Dataset(path3+'yecs15_his_'+f'{i+j:04d}.nc', 'r', format='NETCDF4')
     mask=B['mask_rho'][::8, ::8]    
     angle=B['angle'][::8, ::8]
     uwind=B['Uwind'][2, ::8, ::8] # 12:00 KST
     vwind=B['Vwind'][2, ::8, ::8]
-    mask=np.where(mask==0, np.nan, mask)
-    
+    mask=np.where(mask==0, np.nan, mask)    
     uvlon, uvlat=B['lon_rho'][::8, ::8], B['lat_rho'][::8, ::8]
     
     u3d1=uwind*np.cos(angle)-vwind*np.sin(angle)
     v3d1=uwind*np.cos(angle)+vwind*np.sin(angle)
-    u3d1, v3d1=np.where(u3d1>100, np.nan, u3d1), np.where(v3d1>100, np.nan, v3d1)
-    
+    u3d1, v3d1=np.where(u3d1>100, np.nan, u3d1), np.where(v3d1>100, np.nan, v3d1)    
     
     plt.figure(figsize=(15, 19.5), dpi=100)
     M=Basemap(projection='mill', llcrnrlat=25, urcrnrlat=41, llcrnrlon=117, urcrnrlon=131, resolution='h')
@@ -62,15 +78,12 @@ for i in range(round(len(flist)/24)):
     # Unit vector
     # p = plt.quiverkey(q, M(118), M(40), 1, "1 m/s",coordinates='data',color='r', labelpos='S', alpha=1, 
     #                   labelcolor='w', fontproperties={'size':16}, labelsep=0.13)    
-    # M.scatter(xt, yt, c='#B7BD04', s=4)
     apw1=M.scatter(xt, yt, c='#FF0000', s=1)
     apw0=M.scatter(xt2, yt2, c='#0000FF', s=1)
     plt.legend([apw1, apw0], ['apw = 1', 'apw = 0'], fontsize=32, markerscale=32, loc=1)
-    plt.title(A[i+79]+' KST (start : 2017-04-13)', fontsize=40) # 79
-    # plt.savefig(path2+'figure/'+flist[(i*24)+1][45:57]+'.png',format='png',
-    #             facecolor=None, edgecolor=None, transparent=True)
-    # plt.savefig('C:/Users/helmut/Desktop/transparent_test.png',format='png',
-    #             facecolor=None, edgecolor=None, transparent=True)
+    plt.title(A[i]+' KST (start : 2019-04-01)', fontsize=40)
+    plt.savefig(path2+dlist2[9]+'/figure/'+flist[(i*24)+1][63:75]+'.png',format='png',
+                facecolor=None, edgecolor=None, transparent=True)    
     plt.show()
     
 # ======================================================================
